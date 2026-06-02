@@ -1,228 +1,178 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PinkFlow Tracker — Your Cycle Companion</title>
-  <meta name="description" content="Track your menstrual cycle, predict next period, monitor mood & symptoms." />
-  <meta name="theme-color" content="#f9a8c9" />
-
-  <!-- PWA manifest inline -->
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-
-  <!-- Chart.js -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PinkFlow Tracker | Menstrual Cycle & Period Predictor</title>
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-  <!-- jsPDF + AutoTable for PDF export -->
+  <!-- html2canvas + jspdf for PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<!-- ========== HEADER ========== -->
-<header class="header">
-  <div class="header-inner">
-    <div class="logo">
-      <span class="logo-icon">🌸</span>
-      <span class="logo-text">PinkFlow<span class="logo-sub">Tracker</span></span>
-    </div>
-    <nav class="nav" id="mainNav">
-      <a href="#dashboard" class="nav-link active" data-section="dashboard">Dashboard</a>
-      <a href="#calendar" class="nav-link" data-section="calendar">Calendar</a>
-      <a href="#calculator" class="nav-link" data-section="calculator">Predict</a>
-      <a href="#mood" class="nav-link" data-section="mood">Mood</a>
-      <a href="#stats" class="nav-link" data-section="stats">Stats</a>
-      <a href="#history" class="nav-link" data-section="history">History</a>
-      <a href="#tips" class="nav-link" data-section="tips">Tips</a>
-    </nav>
-    <div class="header-actions">
-      <button class="btn-icon" id="notifBtn" title="Enable Notifications">🔔</button>
-      <button class="btn-icon theme-toggle" id="themeToggle" title="Toggle Dark Mode">🌙</button>
-      <button class="btn-icon hamburger" id="hamburger" aria-label="Menu">☰</button>
-    </div>
-  </div>
-</header>
-
-<!-- Mobile Nav Drawer -->
-<div class="nav-drawer" id="navDrawer">
-  <button class="drawer-close" id="drawerClose">✕</button>
-  <a href="#dashboard" class="drawer-link" data-section="dashboard">🏠 Dashboard</a>
-  <a href="#calendar" class="drawer-link" data-section="calendar">📅 Calendar</a>
-  <a href="#calculator" class="drawer-link" data-section="calculator">🔮 Predict</a>
-  <a href="#mood" class="drawer-link" data-section="mood">💭 Mood</a>
-  <a href="#stats" class="drawer-link" data-section="stats">📊 Stats</a>
-  <a href="#history" class="drawer-link" data-section="history">📋 History</a>
-  <a href="#tips" class="drawer-link" data-section="tips">💡 Tips</a>
-</div>
-<div class="drawer-overlay" id="drawerOverlay"></div>
-
-<main class="main">
-
-  <!-- ========== DASHBOARD ========== -->
-  <section id="dashboard" class="section active">
-    <div class="section-header">
-      <h2 class="section-title">Your Cycle Dashboard</h2>
-      <p class="section-sub" id="dashGreeting">Good morning! Here's your cycle snapshot.</p>
-    </div>
-
-    <!-- Cycle Phase Banner -->
-    <div class="phase-banner" id="phaseBanner">
-      <div class="phase-orb" id="phaseOrb"></div>
-      <div class="phase-info">
-        <span class="phase-label">Current Phase</span>
-        <strong class="phase-name" id="phaseName">—</strong>
-        <span class="phase-desc" id="phaseDesc">Log your first period to begin tracking.</span>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="glass-header">
+      <div class="logo-area">
+        <div class="logo-icon">🌸</div>
+        <h1>PinkFlow Tracker</h1>
       </div>
-    </div>
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="icon-btn" aria-label="Dark mode">🌙</button>
+        <button id="exportMenuBtn" class="icon-btn" aria-label="Export">📎</button>
+        <div id="exportDropdown" class="export-dropdown hidden">
+          <button id="exportCSVBtn">📄 Export CSV</button>
+          <button id="exportPDFBtn">📑 Export PDF</button>
+        </div>
+      </div>
+    </header>
 
     <!-- Dashboard Cards -->
-    <div class="cards-grid">
-      <div class="card card--primary" id="cardCycleDay">
-        <div class="card-icon">🌺</div>
-        <div class="card-body">
-          <span class="card-label">Cycle Day</span>
-          <strong class="card-value" id="cycleDay">—</strong>
-          <span class="card-note" id="cycleDayNote">Start tracking below</span>
-        </div>
+    <div class="dashboard-grid">
+      <div class="glass-card dash-card">
+        <span class="card-title">📆 Cycle Day</span>
+        <div class="dash-value" id="cycleDayValue">--</div>
+        <small>of current cycle</small>
       </div>
-      <div class="card" id="cardNextPeriod">
-        <div class="card-icon">📅</div>
-        <div class="card-body">
-          <span class="card-label">Next Period</span>
-          <strong class="card-value" id="nextPeriodDate">—</strong>
-          <span class="card-note" id="nextPeriodNote">Use predictor to calculate</span>
-        </div>
+      <div class="glass-card dash-card">
+        <span class="card-title">🔮 Next Period</span>
+        <div class="dash-value" id="nextPeriodDate">--</div>
+        <small id="daysLeftText">-- days left</small>
       </div>
-      <div class="card" id="cardDaysLeft">
-        <div class="card-icon">⏳</div>
-        <div class="card-body">
-          <span class="card-label">Days Until Period</span>
-          <strong class="card-value" id="daysLeft">—</strong>
-          <span class="card-note" id="daysLeftNote">—</span>
-        </div>
+      <div class="glass-card dash-card">
+        <span class="card-title">🥚 Ovulation</span>
+        <div class="dash-value" id="ovulationDate">--</div>
+        <small>Fertile window: 5 days before</small>
       </div>
-      <div class="card" id="cardOvulation">
-        <div class="card-icon">✨</div>
-        <div class="card-body">
-          <span class="card-label">Ovulation Day</span>
-          <strong class="card-value" id="ovulationDay">—</strong>
-          <span class="card-note" id="fertileWindow">—</span>
-        </div>
+      <div class="glass-card dash-card">
+        <span class="card-title">⏳ Days Remaining</span>
+        <div class="dash-value" id="daysRemainingCount">--</div>
+        <small>until next period</small>
       </div>
     </div>
 
-    <!-- Countdown Strip -->
-    <div class="countdown-strip" id="countdownStrip" style="display:none">
-      <span class="cd-label">🩸 Period arriving in</span>
-      <span class="cd-days" id="countdownDays">—</span>
-      <span class="cd-label">days</span>
-      <div class="cd-bar-wrap"><div class="cd-bar" id="cdBar"></div></div>
+    <!-- Quick Health Insight -->
+    <div class="glass-card insight-banner">
+      <span id="healthInsight">✨ Track your cycle for personalized insights ✨</span>
     </div>
 
-    <!-- Quick Log Today -->
-    <div class="glass-card quick-log">
-      <h3 class="card-title">Quick Log Today</h3>
-      <div class="quick-log-grid">
-        <div class="ql-group">
-          <label class="ql-label">Period Today?</label>
-          <div class="ql-btns">
-            <button class="ql-btn" id="logPeriodStart" onclick="quickLogPeriod('start')">🩸 Start</button>
-            <button class="ql-btn" id="logPeriodEnd" onclick="quickLogPeriod('end')">🔴 End</button>
+    <!-- Two column: Calendar + Calculator -->
+    <div class="two-col">
+      <!-- Calendar Section -->
+      <div class="glass-card calendar-section">
+        <div class="section-header">
+          <h3>📅 Period Calendar</h3>
+          <div class="month-nav">
+            <button id="prevMonthBtn">◀</button>
+            <span id="monthYearDisplay"></span>
+            <button id="nextMonthBtn">▶</button>
           </div>
         </div>
-        <div class="ql-group">
-          <label class="ql-label">Today's Mood</label>
-          <div class="mood-quick">
-            <button class="mood-btn" data-mood="happy" onclick="quickLogMood('happy')">😊</button>
-            <button class="mood-btn" data-mood="neutral" onclick="quickLogMood('neutral')">😐</button>
-            <button class="mood-btn" data-mood="sad" onclick="quickLogMood('sad')">😔</button>
-            <button class="mood-btn" data-mood="cramps" onclick="quickLogMood('cramps')">😣</button>
-            <button class="mood-btn" data-mood="tired" onclick="quickLogMood('tired')">😴</button>
-          </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-legend">
+          <span><span class="legend-pink"></span> Period Day</span>
+          <span><span class="legend-fertile"></span> Fertile Window</span>
+        </div>
+        <div class="range-actions">
+          <button id="clearPeriodBtn" class="sec-btn">🗑 Clear All Periods</button>
+          <button id="markRangeBtn" class="primary-btn">📌 Mark Period Range</button>
         </div>
       </div>
-    </div>
 
-    <!-- Health Insight of the Day -->
-    <div class="glass-card insight-card">
-      <div class="insight-icon">💡</div>
-      <div class="insight-body">
-        <span class="insight-label">Phase Insight</span>
-        <p class="insight-text" id="insightText">Log your cycle to receive personalized phase-based insights.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== CALENDAR ========== -->
-  <section id="calendar" class="section">
-    <div class="section-header">
-      <h2 class="section-title">Period Calendar</h2>
-      <p class="section-sub">Tap any day to mark or unmark a period day.</p>
-    </div>
-
-    <div class="glass-card cal-wrap">
-      <div class="cal-header">
-        <button class="cal-nav" id="calPrev">‹</button>
-        <h3 class="cal-month" id="calMonthLabel"></h3>
-        <button class="cal-nav" id="calNext">›</button>
-      </div>
-      <div class="cal-legend">
-        <span class="legend-dot legend-period"></span> Period
-        <span class="legend-dot legend-ovulation"></span> Ovulation
-        <span class="legend-dot legend-fertile"></span> Fertile Window
-        <span class="legend-dot legend-today"></span> Today
-      </div>
-      <div class="cal-grid" id="calGrid"></div>
-    </div>
-
-    <div class="glass-card cal-note-wrap">
-      <h3 class="card-title">Add Note / Symptom for a Day</h3>
-      <div class="form-row">
-        <input type="date" id="noteDate" class="input" />
-        <input type="text" id="noteText" class="input" placeholder="e.g. Headache, cramps..." />
-        <button class="btn btn--primary" onclick="addDayNote()">Save Note</button>
-      </div>
-      <div id="notesDisplay" class="notes-list"></div>
-    </div>
-  </section>
-
-  <!-- ========== CALCULATOR ========== -->
-  <section id="calculator" class="section">
-    <div class="section-header">
-      <h2 class="section-title">Cycle Predictor</h2>
-      <p class="section-sub">Enter your details to predict your next period and fertile window.</p>
-    </div>
-
-    <div class="calc-layout">
-      <div class="glass-card calc-form">
-        <h3 class="card-title">Your Cycle Details</h3>
+      <!-- Calculator Section -->
+      <div class="glass-card calculator-card">
+        <h3>📊 Next Period Calculator</h3>
         <div class="form-group">
-          <label class="form-label">Last Period Start Date</label>
-          <input type="date" id="calcLastDate" class="input" />
+          <label>📅 Last period start date</label>
+          <input type="date" id="lastPeriodStart">
         </div>
         <div class="form-group">
-          <label class="form-label">Average Cycle Length <span class="hint">(days)</span></label>
-          <div class="slider-wrap">
-            <input type="range" id="calcCycleLen" min="21" max="45" value="28" class="slider" oninput="updateSlider('calcCycleLen','calcCycleLenVal')" />
-            <span class="slider-val" id="calcCycleLenVal">28</span>
-          </div>
+          <label>⏲️ Average cycle length (days)</label>
+          <input type="number" id="cycleLength" value="28" min="20" max="45">
         </div>
         <div class="form-group">
-          <label class="form-label">Average Period Duration <span class="hint">(days)</span></label>
-          <div class="slider-wrap">
-            <input type="range" id="calcPeriodDur" min="1" max="10" value="5" class="slider" oninput="updateSlider('calcPeriodDur','calcPeriodDurVal')" />
-            <span class="slider-val" id="calcPeriodDurVal">5</span>
-          </div>
+          <label>🩸 Period duration (days)</label>
+          <input type="number" id="periodDuration" value="5" min="1" max="10">
         </div>
-        <button class="btn btn--primary btn--full" onclick="calculateCycle()">🔮 Predict My Cycle</button>
+        <button id="calculateBtn" class="primary-btn">💖 Predict & Save</button>
+        <div class="prediction-results" id="predictionResults">
+          <p>✨ Next expected: <strong id="predNextPeriod">--</strong></p>
+          <p>🌸 Fertile window: <strong id="predFertile">--</strong></p>
+          <p>🥚 Ovulation day: <strong id="predOvulation">--</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mood & Symptoms Tracker -->
+    <div class="glass-card mood-symptoms">
+      <h3>😊 Daily Mood & Symptoms Tracker</h3>
+      <div class="tracker-row">
+        <div class="date-selector">
+          <label>Date:</label>
+          <input type="date" id="logDate">
+        </div>
+        <div class="mood-buttons">
+          <span>Mood:</span>
+          <button data-mood="happy" class="mood-btn">😊 Happy</button>
+          <button data-mood="neutral" class="mood-btn">😐 Neutral</button>
+          <button data-mood="sad" class="mood-btn">😔 Sad</button>
+          <button data-mood="cramps" class="mood-btn">😣 Cramps</button>
+          <button data-mood="tired" class="mood-btn">😴 Tired</button>
+        </div>
+        <div class="symptoms-group">
+          <span>Symptoms:</span>
+          <label><input type="checkbox" value="Headache"> Headache</label>
+          <label><input type="checkbox" value="Cramps"> Cramps</label>
+          <label><input type="checkbox" value="Bloating"> Bloating</label>
+          <label><input type="checkbox" value="Acne"> Acne</label>
+          <label><input type="checkbox" value="Back Pain"> Back Pain</label>
+          <label><input type="checkbox" value="Fatigue"> Fatigue</label>
+        </div>
+        <button id="saveLogBtn" class="sec-btn">💾 Save Log</button>
+      </div>
+      <div id="logFeedback" class="feedback-msg"></div>
+    </div>
+
+    <!-- Statistics & Chart -->
+    <div class="glass-card stats-section">
+      <h3>📈 Cycle Statistics & Insights</h3>
+      <div class="stats-metrics">
+        <div class="stat-item">Avg Cycle: <span id="avgCycleStat">--</span> days</div>
+        <div class="stat-item">Avg Period: <span id="avgPeriodStat">--</span> days</div>
+        <div class="stat-item">Longest Cycle: <span id="longestCycleStat">--</span></div>
+        <div class="stat-item">Shortest Cycle: <span id="shortestCycleStat">--</span></div>
+      </div>
+      <canvas id="cycleChart" width="400" height="200" style="max-height:250px; width:100%"></canvas>
+      <div class="health-tips">
+        <h4>💡 Cycle Phase Tips</h4>
+        <p id="healthTipMsg">Stay hydrated & listen to your body!</p>
+      </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="glass-card history-section">
+      <h3>📋 Period History</h3>
+      <div style="overflow-x: auto;">
+        <table id="historyTable">
+          <thead>
+            <tr><th>Start Date</th><th>End Date</th><th>Cycle Length</th><th>Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer-note">
+      <p>🌸 Health disclaimer: This app provides estimations, not medical advice. Data stored locally in your browser.</p>
+      <p>🔒 Privacy: All data stays on your device.</p>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>ary btn--full" onclick="calculateCycle()">🔮 Predict My Cycle</button>
       </div>
 
       <div class="glass-card calc-results" id="calcResults" style="display:none">
