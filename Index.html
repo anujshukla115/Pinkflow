@@ -1,573 +1,695 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>PinkFlow Tracker | Cycle & Period Predictor</title>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- html2pdf for PDF export (optional nice feature) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <style>
-    /* style.css embedded */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>🌸 LilyPad · Complete Cycle Calendar | Follicular Phase Visible</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      background: linear-gradient(145deg, #fff5f9 0%, #fdeff4 100%);
-      padding: 1.5rem;
-      transition: background 0.3s, color 0.2s;
-    }
+        body {
+            background: linear-gradient(145deg, #fff5f8 0%, #ffe6ef 100%);
+            font-family: 'Segoe UI', 'Quicksand', system-ui, -apple-system, 'Poppins', 'Roboto', sans-serif;
+            padding: 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    /* dark mode class */
-    body.dark {
-      background: #1e1a2f;
-      color: #f3eef8;
-    }
+        .tracker-card {
+            max-width: 1250px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(255, 250, 252, 0.94);
+            backdrop-filter: blur(2px);
+            border-radius: 56px;
+            box-shadow: 0 25px 45px -12px rgba(245, 155, 185, 0.4), 0 8px 18px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 225, 0.7);
+        }
 
-    body.dark .glass-card,
-    body.dark .calendar-day,
-    body.dark .dashboard-card,
-    body.dark .history-table-container,
-    body.dark .input-group input,
-    body.dark .mood-btn,
-    body.dark .symptom-chip {
-      background: rgba(30, 26, 47, 0.75);
-      backdrop-filter: blur(12px);
-      border-color: #9f7aea40;
-      color: #f0eafc;
-    }
+        .header {
+            background: #ffecf0;
+            padding: 1.8rem 2rem 1.4rem 2rem;
+            text-align: center;
+            border-bottom: 2px solid #ffd9e2;
+        }
 
-    body.dark .calendar-day.period {
-      background: #d946ef40;
-      color: #f9a8d4;
-    }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #b3406c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
 
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
+        .sub {
+            color: #c96f8e;
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 1.05rem;
+        }
 
-    /* glassmorphism cards */
-    .glass-card {
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(16px);
-      border-radius: 2rem;
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-      padding: 1.5rem;
-      transition: transform 0.2s ease, box-shadow 0.2s;
-    }
+        .content {
+            padding: 2rem 2rem 2rem;
+        }
 
-    .glass-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 20px 35px -12px rgba(219, 112, 147, 0.2);
-    }
+        .input-row {
+            background: #ffffffcc;
+            border-radius: 48px;
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 1.2rem;
+            justify-content: space-between;
+        }
 
-    /* header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 2rem;
-    }
+        .input-field {
+            flex: 1;
+            min-width: 170px;
+        }
 
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
+        .input-field label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #b55a7e;
+            margin-bottom: 8px;
+        }
 
-    .logo-icon {
-      font-size: 2.5rem;
-    }
+        input, select {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 1.5px solid #ffcdda;
+            background: #fff9fb;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            font-weight: 500;
+            color: #3d2a32;
+        }
 
-    h1 {
-      font-size: 1.8rem;
-      background: linear-gradient(135deg, #db6b9f, #b04b8a);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      font-weight: 700;
-    }
+        button {
+            background: #f7c2d4;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #8f3a58;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
 
-    .theme-toggle {
-      background: #ffe2f0;
-      border: none;
-      font-size: 1.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: 3rem;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+        .primary-btn {
+            background: #e8a1bc;
+            color: white;
+            box-shadow: 0 6px 14px rgba(232, 161, 188, 0.3);
+            font-size: 1.05rem;
+            padding: 14px 32px;
+        }
 
-    /* dashboard grid */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 1.2rem;
-      margin-bottom: 2rem;
-    }
+        button:hover {
+            background: #f5b0ca;
+            transform: scale(0.97);
+        }
 
-    .dashboard-card {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(8px);
-      border-radius: 1.5rem;
-      padding: 1rem 1.2rem;
-      text-align: center;
-      border: 1px solid #ffdfea;
-    }
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
 
-    .card-value {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #c4457c;
-      margin: 0.5rem 0;
-    }
+        .next-card {
+            flex: 1.2;
+            min-width: 260px;
+            background: #fff4f8;
+            border-radius: 40px;
+            padding: 1.5rem;
+            border: 1px solid #ffdee8;
+        }
 
-    body.dark .card-value {
-      color: #f9a8d4;
-    }
+        .calendar-container {
+            flex: 2.5;
+            min-width: 300px;
+            background: #fffafc;
+            border-radius: 40px;
+            padding: 1rem 1.2rem 1.5rem;
+            border: 1px solid #ffe2ec;
+        }
 
-    /* calendar */
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
+        .next-title {
+            font-weight: 700;
+            color: #b7557b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+        }
 
-    .calendar-weekdays {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      text-align: center;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: #b35d89;
-    }
+        .next-date {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #a13e62;
+            letter-spacing: -0.5px;
+            margin: 8px 0 4px;
+        }
 
-    .calendar-days {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-    }
+        .info-text {
+            font-size: 1rem;
+            color: #b16886;
+            margin-top: 8px;
+            font-weight: 500;
+        }
 
-    .calendar-day {
-      background: rgba(255, 235, 243, 0.7);
-      border-radius: 2rem;
-      padding: 0.8rem 0.2rem;
-      text-align: center;
-      font-weight: 500;
-      cursor: pointer;
-      transition: 0.1s;
-      border: 1px solid #ffe0ed;
-    }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin: 20px 0 12px;
+        }
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .legend-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 20px;
+            display: inline-block;
+        }
 
-    .calendar-day.period {
-      background: #fbcfe8;
-      color: #b43b6e;
-      font-weight: bold;
-      box-shadow: 0 0 0 1px #f9a8d4;
-    }
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 700;
+            color: #b55a7e;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .cal-day {
+            background: #fff3f7;
+            border-radius: 48px;
+            text-align: center;
+            padding: 12px 5px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #4a2e39;
+            transition: 0.1s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        /* CYCLE PHASE COLORS - FOLLICULAR NOW CLEARLY VISIBLE */
+        .cal-day.period { background: #ffb7cc; color: #6b2e48; font-weight: 800; box-shadow: inset 0 0 0 2px #ff8faf; }
+        .cal-day.follicular { background: #b8dfd6; color: #1e5a4f; font-weight: 700; border: 1px solid #8bc1b4; }
+        .cal-day.fertile { background: #fee2b5; color: #9b5e2c; font-weight: 700; border: 1px solid #ffcf8a; }
+        .cal-day.ovulation { background: #f5bc70; color: #592c12; font-weight: 800; box-shadow: 0 0 0 2px #ffe1a0; }
+        .cal-day.luteal { background: #e7d3e6; color: #6a4268; font-weight: 600; }
+        .cal-day.other-cycle { background: #fdeef3; }
+        .cal-day.today { border: 3px solid #e8a1bc; font-weight: 800; }
 
-    body.dark .calendar-day.period {
-      background: #b13e6e;
-      color: #ffdeef;
-    }
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 12px 0 20px;
+        }
+        .month-nav button {
+            background: #ffe0ea;
+            padding: 8px 20px;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .month-nav span {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #b7557b;
+        }
 
-    .calendar-day:hover {
-      background: #ffd9e8;
-      transform: scale(0.97);
-    }
+        .mood-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: inherit;
+        }
+        .modal-content {
+            background: #fff9fb;
+            border-radius: 48px;
+            max-width: 380px;
+            width: 90%;
+            padding: 2rem 1.8rem;
+            text-align: center;
+            box-shadow: 0 25px 40px rgba(160, 70, 100, 0.3);
+            border: 2px solid #ffd0de;
+            animation: fadeInUp 0.2s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .modal-content h3 {
+            font-size: 1.8rem;
+            color: #b3406c;
+            margin-bottom: 8px;
+        }
+        .modal-date {
+            font-size: 1rem;
+            color: #c96f8e;
+            margin-bottom: 18px;
+            font-weight: 500;
+        }
+        .mood-emoji {
+            font-size: 3.2rem;
+            margin: 12px 0;
+        }
+        .mood-description {
+            font-size: 1.1rem;
+            line-height: 1.45;
+            color: #5a3645;
+            font-weight: 500;
+            background: #ffeef4;
+            padding: 16px;
+            border-radius: 32px;
+            margin: 16px 0;
+        }
+        .close-modal {
+            background: #f3c5d8;
+            padding: 10px 24px;
+            font-size: 1rem;
+            margin-top: 12px;
+        }
 
-    /* forms */
-    .flex-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.2rem;
-      margin: 1rem 0;
-    }
-
-    .input-group {
-      flex: 1;
-      min-width: 150px;
-    }
-
-    label {
-      font-weight: 600;
-      color: #b34a77;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 0.7rem;
-      border-radius: 2rem;
-      border: 1px solid #ffc0d0;
-      background: white;
-      margin-top: 0.3rem;
-    }
-
-    button {
-      background: #ec8bb6;
-      border: none;
-      padding: 0.7rem 1.3rem;
-      border-radius: 2rem;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    button:hover {
-      background: #d86b9b;
-    }
-
-    /* mood & symptoms */
-    .mood-grid {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-      margin: 0.8rem 0;
-    }
-
-    .mood-btn {
-      background: #ffe4f0;
-      border: none;
-      font-size: 1.4rem;
-      padding: 0.5rem 1rem;
-      border-radius: 3rem;
-      cursor: pointer;
-    }
-
-    .symptom-chip {
-      background: #ffeef4;
-      border-radius: 2rem;
-      padding: 0.4rem 1rem;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin: 0.2rem;
-    }
-
-    .history-table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 0.7rem;
-      text-align: left;
-      border-bottom: 1px solid #ffcfdf;
-    }
-
-    .export-buttons {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    footer {
-      margin-top: 2rem;
-      text-align: center;
-      font-size: 0.8rem;
-      opacity: 0.7;
-    }
-
-    @media (max-width: 700px) {
-      body { padding: 1rem; }
-      .dashboard-grid { grid-template-columns: 1fr 1fr; }
-    }
-  </style>
+        .history-section {
+            margin-top: 2rem;
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 18px;
+        }
+        .history-header h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #b7476f;
+        }
+        .history-list {
+            background: #ffffffc9;
+            border-radius: 36px;
+            padding: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid #ffe2ec;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 28px;
+            color: #c98aa6;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #dc9bb6;
+            padding: 1.2rem;
+            background: #fff8fa;
+        }
+        @media (max-width: 750px) {
+            body { padding: 0.8rem; }
+            .content { padding: 1.2rem; }
+            .cal-day { padding: 8px 2px; font-size: 0.85rem; }
+            .next-date { font-size: 1.4rem; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div class="logo-area">
-      <span class="logo-icon">🌸💖</span>
-      <h1>PinkFlow Tracker</h1>
+<div class="tracker-card">
+    <div class="header">
+        <h1><span>🌸</span> LilyPad · Cycle & Mood Tracker<span>🌸</span></h1>
+        <div class="sub">period · follicular · fertile · ovulation · luteal</div>
     </div>
-    <button class="theme-toggle" id="darkModeToggle">🌙 Dark</button>
-  </div>
+    <div class="content">
+        <div class="input-row">
+            <div class="input-field"><label>📅 LAST PERIOD START</label><input type="date" id="lastPeriodDate"></div>
+            <div class="input-field"><label>⏱️ CYCLE LENGTH (days)</label><input type="number" id="cycleLength" value="28" min="21" max="45"></div>
+            <div class="input-field"><label>🩸 PERIOD DURATION (days)</label><input type="number" id="periodDuration" value="5" min="2" max="10"></div>
+            <button id="trackBtn" class="primary-btn">✨ Update & Predict</button>
+        </div>
 
-  <!-- Dashboard Cards -->
-  <div class="dashboard-grid" id="dashboardGrid">
-    <div class="dashboard-card"><div>📆 Cycle Day</div><div class="card-value" id="cycleDayValue">—</div></div>
-    <div class="dashboard-card"><div>🔮 Next Period</div><div class="card-value" id="nextPeriodValue">—</div></div>
-    <div class="dashboard-card"><div>⏳ Days Left</div><div class="card-value" id="daysLeftValue">—</div></div>
-    <div class="dashboard-card"><div>🥚 Ovulation Day</div><div class="card-value" id="ovulationValue">—</div></div>
-    <div class="dashboard-card"><div>🌸 Fertile Window</div><div class="card-value" id="fertileValue">—</div></div>
-  </div>
+        <div class="dashboard">
+            <div class="next-card">
+                <div class="next-title">🌙 Upcoming Period</div>
+                <div id="nextPeriodDisplay"><div class="next-date">— — —</div></div>
+                <div style="margin-top: 20px;" class="next-title">🥚 Ovulation Day</div>
+                <div id="ovulationDisplay" class="info-text">—</div>
+                <div style="margin-top: 18px;" class="next-title">🌸 Fertile Window</div>
+                <div id="fertileWindowDisplay" class="info-text">—</div>
+                <div class="legend" style="margin-top: 24px;">
+                    <span><div class="legend-dot" style="background:#ffb7cc;"></div> Period</span>
+                    <span><div class="legend-dot" style="background:#b8dfd6;"></div> Follicular ✨</span>
+                    <span><div class="legend-dot" style="background:#fee2b5;"></div> Fertile</span>
+                    <span><div class="legend-dot" style="background:#f5bc70;"></div> Ovulation</span>
+                    <span><div class="legend-dot" style="background:#e7d3e6;"></div> Luteal</span>
+                </div>
+                <div class="info-text" style="font-size:0.8rem; margin-top:12px;">💖 Click any day → mood & symptoms</div>
+            </div>
+            <div class="calendar-container">
+                <div class="month-nav"><button id="prevMonthBtn">◀ Prev</button><span id="monthYearLabel"></span><button id="nextMonthBtn">Next ▶</button></div>
+                <div class="calendar-header"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>
+                <div id="calendarGrid" class="calendar-grid"></div>
+                <div style="font-size:0.75rem; text-align:center; margin-top:12px; color:#c27799;"></div>
+            </div>
+        </div>
 
-  <!-- Calendar Section -->
-  <div class="glass-card" style="margin-bottom: 1.5rem;">
-    <div class="calendar-header">
-      <button id="prevMonthBtn">◀</button>
-      <h3 id="monthYearDisplay">March 2026</h3>
-      <button id="nextMonthBtn">▶</button>
+        <div class="history-section">
+            <div class="history-header"><h3>📖 Period History</h3><button id="clearHistoryBtn" style="background:transparent; color:#d48aab;">🗑️ Clear all</button></div>
+            <div class="history-list" id="historyList"><div class="empty-message">🌸 No entries yet. Log your first period above!</div></div>
+        </div>
     </div>
-    <div class="calendar-weekdays">
-      <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-    </div>
-    <div class="calendar-days" id="calendarDaysContainer"></div>
-    <p style="font-size: 0.75rem; margin-top: 0.7rem;">💡 Click on a date to mark period start. Drag not needed: single click will open modal to set period range.</p>
-  </div>
+    <footer></footer>
+</div>
 
-  <!-- Calculator + Settings -->
-  <div class="glass-card" style="margin-bottom: 1.5rem;">
-    <h3>📊 Cycle Predictor & Settings</h3>
-    <div class="flex-form">
-      <div class="input-group"><label>📅 Last Period Start</label><input type="date" id="lastPeriodStart" value="2026-02-01"></div>
-      <div class="input-group"><label>⏱️ Avg Cycle Length (days)</label><input type="number" id="avgCycleLength" value="28" min="20" max="45"></div>
-      <div class="input-group"><label>🩸 Period Duration (days)</label><input type="number" id="periodDuration" value="5" min="1" max="10"></div>
-      <div class="input-group"><button id="updatePredictBtn">Update Predictions</button></div>
+<div id="moodModal" class="mood-modal">
+    <div class="modal-content">
+        <h3 id="modalPhaseTitle">🌸 Phase</h3>
+        <div class="modal-date" id="modalDate">—</div>
+        <div class="mood-emoji" id="modalEmoji">✨</div>
+        <div class="mood-description" id="modalMoodText">Tap a day to see mood & body insights</div>
+        <button class="close-modal" id="closeModalBtn">Close</button>
     </div>
-    <div id="predictionDetails" style="margin-top: 1rem; background: #ffeaf2; padding: 0.7rem; border-radius: 1rem;"></div>
-  </div>
-
-  <!-- Mood & Symptoms Tracker -->
-  <div class="glass-card" style="margin-bottom: 1.5rem;">
-    <h3>😊 Daily Mood & Symptoms</h3>
-    <div><strong>Today: </strong><span id="todayDateLabel"></span></div>
-    <div class="mood-grid" id="moodButtonsContainer">
-      <button class="mood-btn" data-mood="happy">😊 Happy</button>
-      <button class="mood-btn" data-mood="neutral">😐 Neutral</button>
-      <button class="mood-btn" data-mood="sad">😔 Sad</button>
-      <button class="mood-btn" data-mood="cramps">😣 Cramps</button>
-      <button class="mood-btn" data-mood="tired">😴 Tired</button>
-    </div>
-    <div id="symptomsArea">
-      <strong>Symptoms:</strong>
-      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0;">
-        <span class="symptom-chip" data-symptom="headache">🤕 Headache</span>
-        <span class="symptom-chip" data-symptom="cramps">⚠️ Cramps</span>
-        <span class="symptom-chip" data-symptom="bloating">🎈 Bloating</span>
-        <span class="symptom-chip" data-symptom="acne">🔴 Acne</span>
-        <span class="symptom-chip" data-symptom="backpain">🦴 Back Pain</span>
-        <span class="symptom-chip" data-symptom="fatigue">😩 Fatigue</span>
-      </div>
-    </div>
-    <p><small>✔️ Daily logs saved automatically</small></p>
-  </div>
-
-  <!-- Statistics & Chart -->
-  <div class="glass-card" style="margin-bottom: 1.5rem;">
-    <h3>📈 Cycle Statistics & Insights</h3>
-    <canvas id="cycleChart" width="400" height="200" style="max-height: 240px; width:100%"></canvas>
-    <div id="statsText" style="margin-top: 0.8rem; font-weight: 500;"></div>
-    <div id="healthTips" style="margin-top: 1rem; background: #f8e7f0; border-radius: 1rem; padding: 0.8rem;"></div>
-  </div>
-
-  <!-- History Table -->
-  <div class="glass-card">
-    <h3>📜 Period History</h3>
-    <div class="history-table-container">
-      <table id="historyTable">
-        <thead><tr><th>Start Date</th><th>End Date</th><th>Cycle Length</th><th>Actions</th></tr></thead>
-        <tbody id="historyBody"></tbody>
-      </table>
-    </div>
-    <div class="export-buttons">
-      <button id="exportCSVBtn">📎 Export CSV</button>
-      <button id="exportPDFBtn">📄 Export PDF (History)</button>
-    </div>
-  </div>
-  <footer>🌸 PinkFlow Tracker - All data stored locally in your browser. Not medical advice. ❤️</footer>
 </div>
 
 <script>
-  // script.js Vanilla JS, LocalStorage, Notification API, Chart.js
-  (function(){
-    // DOM Elements
-    let cycleHistory = []; // { start, end, cycleLength }
-    let moodLogs = {};     // "YYYY-MM-DD": { mood, symptoms:[] }
-    let currentCalendarDate = new Date(); // year/month
-    let chartInstance = null;
-    
-    // Default prediction vars
-    let lastPeriodStart = "2026-02-01";
-    let avgCycleLength = 28;
-    let periodDuration = 5;
-    
-    // Helper dates
-    function todayStr(){ return new Date().toISOString().slice(0,10); }
-    
-    // Load from localStorage
-    function loadData(){
-      const storedHistory = localStorage.getItem("pinkflow_history");
-      if(storedHistory) cycleHistory = JSON.parse(storedHistory);
-      const storedMood = localStorage.getItem("pinkflow_moods");
-      if(storedMood) moodLogs = JSON.parse(storedMood);
-      const storedSettings = localStorage.getItem("pinkflow_settings");
-      if(storedSettings){
-        let s = JSON.parse(storedSettings);
-        lastPeriodStart = s.lastPeriodStart || "2026-02-01";
-        avgCycleLength = s.avgCycleLength || 28;
-        periodDuration = s.periodDuration || 5;
-      }
-      document.getElementById("lastPeriodStart").value = lastPeriodStart;
-      document.getElementById("avgCycleLength").value = avgCycleLength;
-      document.getElementById("periodDuration").value = periodDuration;
-    }
-    
-    function saveSettings(){
-      localStorage.setItem("pinkflow_settings", JSON.stringify({lastPeriodStart, avgCycleLength, periodDuration}));
-    }
-    function saveHistory(){ localStorage.setItem("pinkflow_history", JSON.stringify(cycleHistory)); }
-    function saveMoodLogs(){ localStorage.setItem("pinkflow_moods", JSON.stringify(moodLogs)); }
-    
-    // Add or update period record
-    function addPeriodRecord(startDate, endDate){
-      // calculate cycle length using last record if exists
-      let cycleLen = avgCycleLength;
-      if(cycleHistory.length>0){
-        let lastRecord = cycleHistory[cycleHistory.length-1];
-        let lastStart = new Date(lastRecord.start);
-        let currentStart = new Date(startDate);
-        let diffDays = Math.round((currentStart - lastStart)/(1000*3600*24));
-        if(diffDays>=18 && diffDays<=60) cycleLen = diffDays;
-      }
-      const existingIndex = cycleHistory.findIndex(rec => rec.start === startDate);
-      if(existingIndex !== -1){
-        cycleHistory[existingIndex] = { start: startDate, end: endDate, cycleLength: cycleLen };
-      } else {
-        cycleHistory.push({ start: startDate, end: endDate, cycleLength: cycleLen });
-      }
-      cycleHistory.sort((a,b)=>new Date(a.start)-new Date(b.start));
-      saveHistory();
-      renderHistoryTable();
-      updateStatisticsAndChart();
-      updateDashboardAndPredictions();
-    }
-    
-    // compute prediction based on lastPeriodStart + avgCycle
-    function getPredictionObjects(){
-      const lastDate = new Date(lastPeriodStart);
-      const cycleLen = avgCycleLength;
-      const nextPeriodStart = new Date(lastDate);
-      nextPeriodStart.setDate(lastDate.getDate() + cycleLen);
-      const nextPeriodEnd = new Date(nextPeriodStart);
-      nextPeriodEnd.setDate(nextPeriodStart.getDate() + (periodDuration-1));
-      const ovulationDay = new Date(lastDate);
-      ovulationDay.setDate(lastDate.getDate() + (cycleLen - 14));
-      const fertileStart = new Date(ovulationDay);
-      fertileStart.setDate(ovulationDay.getDate() - 5);
-      const fertileEnd = new Date(ovulationDay);
-      fertileEnd.setDate(ovulationDay.getDate() + 1);
-      const today = new Date();
-      let daysRemaining = Math.ceil((nextPeriodStart - today)/(1000*3600*24));
-      daysRemaining = daysRemaining<0?0:daysRemaining;
-      let cycleDay = (Math.floor((today - lastDate)/(1000*3600*24)) % cycleLen)+1;
-      if(cycleDay<1 || today < lastDate) cycleDay = 1;
-      return { nextPeriodStart, ovulationDay, fertileStart, fertileEnd, daysRemaining, cycleDay };
-    }
-    
-    function updateDashboardAndPredictions(){
-      const pred = getPredictionObjects();
-      document.getElementById("cycleDayValue").innerText = pred.cycleDay;
-      document.getElementById("nextPeriodValue").innerText = pred.nextPeriodStart.toLocaleDateString();
-      document.getElementById("daysLeftValue").innerText = pred.daysRemaining;
-      document.getElementById("ovulationValue").innerText = pred.ovulationDay.toLocaleDateString();
-      document.getElementById("fertileValue").innerText = `${pred.fertileStart.toLocaleDateString()} - ${pred.fertileEnd.toLocaleDateString()}`;
-      document.getElementById("predictionDetails").innerHTML = `🔮 Next period: ${pred.nextPeriodStart.toLocaleDateString()} (approx). Ovulation: ${pred.ovulationDay.toLocaleDateString()} | 🌸 Fertile window: ${pred.fertileStart.toLocaleDateString()} to ${pred.fertileEnd.toLocaleDateString()}`;
-      // Browser Notification reminder
-      if(pred.daysRemaining <= 5 && pred.daysRemaining > 0 && Notification.permission === "granted"){
-        if(localStorage.getItem("lastNotifDate") !== todayStr()){
-          new Notification("🌸 PinkFlow Reminder", { body: `Your period is expected in ${pred.daysRemaining} days! Get prepared.`, icon: "❤️" });
-          localStorage.setItem("lastNotifDate", todayStr());
+    // ---------- STORAGE ----------
+    let periodLogs = [];
+    let defaultCycle = 28;
+    let defaultPeriodDuration = 5;
+    let currentCalendarMonth = new Date();
+
+    // DOM elements
+    const lastPeriodInput = document.getElementById('lastPeriodDate');
+    const cycleLengthInput = document.getElementById('cycleLength');
+    const periodDurationInput = document.getElementById('periodDuration');
+    const trackBtn = document.getElementById('trackBtn');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const historyListDiv = document.getElementById('historyList');
+    const nextPeriodDisplay = document.getElementById('nextPeriodDisplay');
+    const ovulationDisplay = document.getElementById('ovulationDisplay');
+    const fertileWindowDisplay = document.getElementById('fertileWindowDisplay');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const monthYearLabel = document.getElementById('monthYearLabel');
+    const prevMonthBtn = document.getElementById('prevMonthBtn');
+    const nextMonthBtn = document.getElementById('nextMonthBtn');
+    const moodModal = document.getElementById('moodModal');
+    const modalPhaseTitle = document.getElementById('modalPhaseTitle');
+    const modalDateSpan = document.getElementById('modalDate');
+    const modalEmoji = document.getElementById('modalEmoji');
+    const modalMoodText = document.getElementById('modalMoodText');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    // Mood database
+    function getMoodAndSymptomsByPhase(phase) {
+        switch(phase) {
+            case 'period':
+                return { title: '🩸 Menstruation Phase', emoji: '😣💢🌧️', description: 'Cramps, fatigue, lower back pain. Mood may feel low, irritable, or sensitive. Rest, warm compress, and self-care help.' };
+            case 'follicular':
+                return { title: '🌱 Follicular Phase ✨ Rising Energy', emoji: '🌞✨⚡', description: 'Estrogen rises! You feel more optimistic, social, creative, and motivated. Less discomfort, more "go-getter" energy. Great for starting new projects and workouts!' };
+            case 'fertile':
+                return { title: '🌸 Fertile Window', emoji: '💖🔥🌼', description: 'High energy, glowing skin, increased confidence and libido. You feel flirty, magnetic. Cervical mucus changes — peak fertility approaching.' };
+            case 'ovulation':
+                return { title: '🥚 Ovulation Day', emoji: '🌟💥💕', description: 'Peak energy, charisma, and sensuality! Libido highest. Best day to shine, communicate, and embrace your radiance.' };
+            case 'luteal':
+                return { title: '🌙 Luteal Phase', emoji: '😌🍫😔', description: 'Progesterone rises. Mood may shift: cravings, fatigue, bloating, anxiety, or sadness before period. Rest and nourish yourself.' };
+            default:
+                return { title: '✨ Interphase', emoji: '🌀💭🌸', description: 'Between cycles or after predicted period. Every body is unique — track your patterns.' };
         }
-      }
-      renderCalendar(); // update highlights
     }
-    
-    // Calendar rendering with period highlighting from history
-    function renderCalendar(){
-      const year = currentCalendarDate.getFullYear();
-      const month = currentCalendarDate.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const startWeekday = firstDay.getDay();
-      const daysInMonth = new Date(year, month+1, 0).getDate();
-      const container = document.getElementById("calendarDaysContainer");
-      container.innerHTML = "";
-      for(let i=0;i<startWeekday;i++){
-        let empty = document.createElement("div");
-        container.appendChild(empty);
-      }
-      for(let d=1; d<=daysInMonth; d++){
-        const dateObj = new Date(year, month, d);
-        const dateStr = dateObj.toISOString().slice(0,10);
-        const dayDiv = document.createElement("div");
-        dayDiv.classList.add("calendar-day");
-        dayDiv.innerText = d;
-        // Check if within any period range in history
-        let isPeriodDay = false;
-        for(let rec of cycleHistory){
-          let start = new Date(rec.start);
-          let end = new Date(rec.end);
-          if(dateObj >= start && dateObj <= end) { isPeriodDay = true; break; }
+
+    function formatDatePretty(dateStr) { if(!dateStr) return '—'; const d=new Date(dateStr); return d.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }); }
+    function addDays(dateStr, days) { let d=new Date(dateStr); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+
+    function getLastPeriodStart() { if(!periodLogs.length) return null; const sorted = [...periodLogs].sort((a,b)=>new Date(b.startDate)-new Date(a.startDate)); return sorted[0].startDate; }
+
+    function getCurrentCycleParams() {
+        if(periodLogs.length) {
+            const sorted = [...periodLogs].sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
+            const last = sorted[0];
+            return { cycleLen: last.cycleLengthUsed || defaultCycle, periodLen: last.periodDurationUsed || defaultPeriodDuration, lastStart: last.startDate };
         }
-        if(isPeriodDay) dayDiv.classList.add("period");
-        dayDiv.addEventListener("click", (function(dStr){ return function(){ setPeriodByDate(dStr); }; })(dateStr));
-        container.appendChild(dayDiv);
-      }
-      document.getElementById("monthYearDisplay").innerText = firstDay.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+        return { cycleLen: defaultCycle, periodLen: defaultPeriodDuration, lastStart: null };
+    }
+
+    // CRITICAL FIX: Proper phase assignment with CLEAR FOLLICULAR PHASE
+    function buildCyclePhasesFromStart(cycleStart, cycleLen, periodLen) {
+        if(!cycleStart) return [];
+        const phases = [];
+        // Ovulation day index (0-based from cycle start)
+        const ovulationIndex = cycleLen - 14;
+        // Fertile window starts 5 days before ovulation, ends on ovulation day
+        const fertileStartIndex = ovulationIndex - 5;
+        
+        for(let i = 0; i < cycleLen; i++) {
+            const currentDate = addDays(cycleStart, i);
+            let phase = "other";
+            
+            if(i < periodLen) {
+                phase = "period";
+            } 
+            else if(i === ovulationIndex) {
+                phase = "ovulation";
+            }
+            else if(i >= fertileStartIndex && i < ovulationIndex) {
+                phase = "fertile";
+            }
+            else if(i >= periodLen && i < fertileStartIndex) {
+                phase = "follicular";  // ✅ CLEAR FOLLICULAR PHASE - days after period, before fertile window
+            }
+            else if(i > ovulationIndex && i < cycleLen) {
+                phase = "luteal";
+            }
+            
+            phases.push({ date: currentDate, phase, dayIndex: i });
+        }
+        return phases;
+    }
+
+    function getCurrentCyclePhases() {
+        const { lastStart, cycleLen, periodLen } = getCurrentCycleParams();
+        if(!lastStart) return [];
+        return buildCyclePhasesFromStart(lastStart, cycleLen, periodLen);
+    }
+
+    function computeCycleDetails(lastStart, cycleLen) {
+        if(!lastStart) return { nextPeriodStart: null, ovulationDay: null, fertileStart: null, fertileEnd: null };
+        const nextPeriodStart = addDays(lastStart, cycleLen);
+        const ovulationDay = addDays(nextPeriodStart, -14);
+        const fertileStart = addDays(ovulationDay, -5);
+        const fertileEnd = ovulationDay;
+        return { nextPeriodStart, ovulationDay, fertileStart, fertileEnd };
+    }
+
+    function updateInfoPanel() {
+        const { lastStart, cycleLen, periodLen } = getCurrentCycleParams();
+        if(!lastStart) { 
+            nextPeriodDisplay.innerHTML = '<div class="next-date">✨ Log your period</div><div class="info-text">Add a start date to see predictions</div>';
+            ovulationDisplay.innerText = '—';
+            fertileWindowDisplay.innerText = '—';
+            return;
+        }
+        const details = computeCycleDetails(lastStart, cycleLen);
+        if(details.nextPeriodStart) {
+            nextPeriodDisplay.innerHTML = `<div class="next-date">🌸 ${formatDatePretty(details.nextPeriodStart)}</div><div class="info-text">📆 Cycle: ${cycleLen} days · Period: ${periodLen} days</div>`;
+            ovulationDisplay.innerText = details.ovulationDay ? `${formatDatePretty(details.ovulationDay)}` : '—';
+            fertileWindowDisplay.innerText = (details.fertileStart && details.fertileEnd) ? `${formatDatePretty(details.fertileStart)} – ${formatDatePretty(details.fertileEnd)}` : '—';
+        }
+    }
+
+    function renderCalendar() {
+        const year = currentCalendarMonth.getFullYear();
+        const month = currentCalendarMonth.getMonth();
+        const firstDayOfMonth = new Date(year, month, 1);
+        let startWeekday = firstDayOfMonth.getDay();
+        let adjustedStart = startWeekday === 0 ? 6 : startWeekday - 1;
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        
+        const phasesMap = new Map();
+        const cyclePhases = getCurrentCyclePhases();
+        cyclePhases.forEach(p => { phasesMap.set(p.date, p.phase); });
+        
+        const todayStr = new Date().toISOString().slice(0,10);
+        let calendarDays = [];
+        let dayCounter = 1;
+        const totalCells = 42;
+        
+        for(let i = 0; i < totalCells; i++) {
+            if(i < adjustedStart || dayCounter > daysInMonth) {
+                calendarDays.push({ date: null, phase: null, isCurrentMonth: false });
+            } else {
+                let dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dayCounter).padStart(2,'0')}`;
+                let phase = phasesMap.get(dateStr) || null;
+                let isToday = (dateStr === todayStr);
+                calendarDays.push({ date: dateStr, phase, dayNumber: dayCounter, isToday, isCurrentMonth: true });
+                dayCounter++;
+            }
+        }
+        
+        calendarGrid.innerHTML = '';
+        calendarDays.forEach(day => {
+            const cell = document.createElement('div');
+            cell.className = 'cal-day';
+            if(!day.date) {
+                cell.innerText = '';
+                cell.style.background = 'transparent';
+                cell.style.cursor = 'default';
+            } else {
+                cell.innerText = day.dayNumber;
+                // Apply phase class - FOLLICULAR NOW VISIBLE
+                if(day.phase === 'period') cell.classList.add('period');
+                else if(day.phase === 'follicular') cell.classList.add('follicular');
+                else if(day.phase === 'fertile') cell.classList.add('fertile');
+                else if(day.phase === 'ovulation') cell.classList.add('ovulation');
+                else if(day.phase === 'luteal') cell.classList.add('luteal');
+                if(day.isToday) cell.classList.add('today');
+                
+                cell.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let actualPhase = day.phase || 'other';
+                    const moodData = getMoodAndSymptomsByPhase(actualPhase);
+                    modalPhaseTitle.innerHTML = moodData.title;
+                    modalDateSpan.innerText = formatDatePretty(day.date);
+                    modalEmoji.innerHTML = moodData.emoji;
+                    modalMoodText.innerHTML = moodData.description;
+                    moodModal.style.display = 'flex';
+                });
+            }
+            calendarGrid.appendChild(cell);
+        });
+        monthYearLabel.innerText = firstDayOfMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function changeMonth(delta) { currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + delta); renderCalendar(); }
+
+    function saveToLocal() {
+        localStorage.setItem('lilypad_follicular_fixed', JSON.stringify(periodLogs));
+        localStorage.setItem('lilypad_cycle_fixed', defaultCycle.toString());
+        localStorage.setItem('lilypad_period_fixed', defaultPeriodDuration.toString());
     }
     
-    function setPeriodByDate(dateStr){
-      let duration = periodDuration;
-      let startDate = new Date(dateStr);
-      let endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + duration - 1);
-      let confirmMsg = `Mark period from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}?`;
-      if(confirm(confirmMsg)){
-        addPeriodRecord(startDate.toISOString().slice(0,10), endDate.toISOString().slice(0,10));
-        updateDashboardAndPredictions();
+    function loadFromLocal() {
+        const stored = localStorage.getItem('lilypad_follicular_fixed');
+        if(stored) { try{ periodLogs = JSON.parse(stored); } catch(e){ periodLogs = []; } } else periodLogs = [];
+        const storedCycle = localStorage.getItem('lilypad_cycle_fixed');
+        if(storedCycle) { defaultCycle = parseInt(storedCycle); cycleLengthInput.value = defaultCycle; }
+        const storedPeriod = localStorage.getItem('lilypad_period_fixed');
+        if(storedPeriod) { defaultPeriodDuration = parseInt(storedPeriod); periodDurationInput.value = defaultPeriodDuration; }
+    }
+
+    function renderHistory() {
+        if(!periodLogs.length) { historyListDiv.innerHTML = '<div class="empty-message">🌸 No entries yet. Log your first period above!</div>'; return; }
+        const sorted = [...periodLogs].sort((a,b)=>new Date(b.startDate)-new Date(a.startDate));
+        historyListDiv.innerHTML = sorted.map(entry => `<div class="history-item"><span>📆 ${formatDatePretty(entry.startDate)}</span><span>🔄 cycle ${entry.cycleLengthUsed||defaultCycle}d · period ${entry.periodDurationUsed||defaultPeriodDuration}d</span></div>`).join('');
+    }
+
+    function addPeriodLog(startDate, cycleVal, periodVal) {
+        if(!startDate) return false;
+        if(periodLogs.some(l => l.startDate === startDate)) return false;
+        periodLogs.push({ startDate, cycleLengthUsed: cycleVal, periodDurationUsed: periodVal, loggedAt: new Date().toISOString() });
+        saveToLocal();
+        renderHistory();
+        updateInfoPanel();
         renderCalendar();
-      }
+        return true;
     }
-    
-    function renderHistoryTable(){
-      const tbody = document.getElementById("historyBody");
-      tbody.innerHTML = "";
-      for(let i=0;i<cycleHistory.length;i++){
-        let rec = cycleHistory[i];
-        let row = tbody.insertRow();
-        row.insertCell(0).innerText = rec.start;
-        row.insertCell(1).innerText = rec.end;
-        row.insertCell(2).innerText = rec.cycleLength || "—";
-        let actionCell = row.insertCell(3);
-        let delBtn = document.createElement("button");
-        delBtn.innerText = "Delete";
-        delBtn.style.background = "#d991b0";
-        delBtn.style.padding = "0.2rem 0.6rem";
-        delBtn.onclick = (function(idx){ return function(){ deleteHistoryEntry(idx); }; })(i);
-        actionCell.appendChild(delBtn);
-      }
+
+    function clearAllHistory() {
+        if(confirm("Clear all period history?")) {
+            periodLogs = [];
+            saveToLocal();
+            renderHistory();
+            updateInfoPanel();
+            renderCalendar();
+        }
     }
-    
-    function deleteHistoryEntry(index){
-      cycleHistory.splice(index,1);
-      saveHistory();
-      renderHistoryTable();
-      updateStatisticsAndChart();
-      updateDashboardAndPredictions();
-      renderCalendar();
+
+    function handleUpdate() {
+        let lastStart = lastPeriodInput.value;
+        if(!lastStart) { alert("🌸 Please select your last period start date."); return; }
+        let cycle = parseInt(cycleLengthInput.value);
+        let periodLen = parseInt(periodDurationInput.value);
+        if(isNaN(cycle) || cycle < 18) cycle = 28;
+        if(isNaN(periodLen) || periodLen < 2) periodLen = 5;
+        if(cycle > 55) cycle = 55;
+        if(periodLen > 10) periodLen = 10;
+        defaultCycle = cycle;
+        defaultPeriodDuration = periodLen;
+        cycleLengthInput.value = cycle;
+        periodDurationInput.value = periodLen;
+        addPeriodLog(lastStart, defaultCycle, defaultPeriodDuration);
+        const btn = trackBtn;
+        const original = btn.innerHTML;
+        btn.innerHTML = "✓ Updated!";
+        setTimeout(() => { btn.innerHTML = original; }, 1200);
     }
-    
-    function updateStatisticsAndChart(){
-      if(cycleHistory.length===0){
-        document.getElementById("statsText").innerHTML = "No cycle data yet. Add periods to see statistics.";
-        if(chartInstance) chartInstance.destroy();
-        return;
-      }
-      let cyclesLen = cycleHistory.map(c=>c.cycleLength).filter(l=>l>0);
-      let avgCycle = cyclesLen.length ? (cyclesLen.reduce((a,b)=>a+b,0)/cyclesLen.length).toFixed(1) : avgCycleLength
+
+    function closeModal() { moodModal.style.display = 'none'; }
+    window.addEventListener('click', (e) => { if(e.target === moodModal) closeModal(); });
+    closeModalBtn.addEventListener('click', closeModal);
+
+    function init() {
+        loadFromLocal();
+        renderHistory();
+        updateInfoPanel();
+        renderCalendar();
+        trackBtn.addEventListener('click', handleUpdate);
+        clearHistoryBtn.addEventListener('click', clearAllHistory);
+        prevMonthBtn.addEventListener('click', () => changeMonth(-1));
+        nextMonthBtn.addEventListener('click', () => changeMonth(1));
+        const last = getLastPeriodStart();
+        if(last) lastPeriodInput.value = last;
+        cycleLengthInput.value = defaultCycle;
+        periodDurationInput.value = defaultPeriodDuration;
+    }
+    init();
+</script>
+</body>
+</html>
